@@ -11,6 +11,11 @@ import shutil
 from pprint import pprint , pformat
 import threading
 
+if os.name != 'nt':
+    print('os is not windows')
+    print(os.name)
+    quit(4)
+
 # 현재 이 코드는 vscode에서 수행하는 것이다. 
 # sys.prefix  으로 환경 위치 확인
 # vscode F5 수행으로 인하여 실행 위치가 git의 root가 된다.  os.getcwd() 으로 확인
