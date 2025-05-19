@@ -5,7 +5,7 @@
 - ```uv run main.py```
 ### uv environment on windows
 - [korean reference 출처](https://rudaks.tistory.com/entry/python의-uv-사용법)
-- First of all run powershell
+- uv install
   - ```powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"```
 - ```uv init```
   - Initialize uv environment and create pyproject.toml 
