@@ -1,0 +1,11 @@
+[project]
+name = "mouse-ocr-editor"
+version = "0.1.0"
+description = "editor to modify easily when you want to edit your point and rectangle based on ocr results (easyocr)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "easyocr>=1.7.2",
+    "opencv-contrib-python>=4.11.0.86",
+    "pillow>=11.2.1",
+]
