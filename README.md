@@ -21,7 +21,16 @@
       - ```uv pip compile pyproject.toml -o uv.lock```
       - Edit uv.lock -> remove opencv-python-headless==4.11.0.86
       - ```uv pip sync uv.lock```
-  - Alternatives : uv pip install easyocr --no-deps  -> uv pip install opencv-python pillow numpy -> edit pyproject.toml
+  - Alternatives 1: 
+    - uv pip install easyocr --no-deps  -> uv pip install opencv-python pillow numpy -> edit pyproject.toml
+  - Alternatives 2: if you want to reduce install and loading time when you do not use GPU
+    - ```sh
+      uv pip install easyocr --no-deps
+      uv pip install torch==2.2.2+cpu torchvision==0.17.2+cpu
+      uv pip install pillow numpy opencv-python
+      uv pip compile pyproject.toml -o uv.lock
+      uv pip sync uv.lock
+      ```
 - ```uv run main.py```
   - ```--restart```  option : You starts if you are 
   - After you can see the picture , you click the points and you draw the rectangle with control key.
