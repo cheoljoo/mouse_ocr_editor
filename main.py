@@ -103,9 +103,9 @@ def check_opencv_gui_support():
         cv2.destroyWindow("test_check_window")
     except cv2.error as e:
         if "The function is not implemented" in str(e):
-            print("\n❌ OpenCV GUI 기능이 비활성화되어 있습니다.")
+            print("\nerror: ❌ OpenCV GUI is not available")
             print("➡ 'opencv-python-headless' 버전이 설치되어 있을 가능성이 큽니다.")
-            print("💡 해결 방법:")
+            print("💡 solution:")
             print("   1. 'headless' 버전 제거: pip3 uninstall opencv-python-headless")
             print("   2. GUI 지원 버전 설치: pip3 uninstall openvc-python ->  pip3 install opencv-python\n")
             sys.exit(1)

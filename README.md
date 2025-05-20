@@ -3,6 +3,10 @@
 ## getting started
 ### how to run
 - ```uv run main.py```
+#### if you have the following msg : OpenCV GUI is not available
+- remove all part in related to `opencv-python-headless` in pyproject.toml and uv.lock
+- then you remove `.venv` directory
+- run again ```uv run main.py```
 ### uv environment on windows
 - [korean reference 출처](https://rudaks.tistory.com/entry/python의-uv-사용법)
 - uv install
