@@ -354,7 +354,7 @@ for img_path in ansFiles:
         print('write:',os.path.join(ocr_crop_dir,"final2.json"))
         f.write(pretty_string)
 
-    pprint(ocr_results)
+    # pprint(ocr_results)
     with open(os.path.join(ocr_crop_dir,"ocr_results.json"),'w',encoding="utf-8") as outfile:
         print('write :', os.path.join(ocr_crop_dir,"ocr_results.json"))
         jsons = json.dumps(convert_numpy(ocr_results),indent=4)
