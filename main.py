@@ -232,6 +232,7 @@ import cv2
 
 
 '''
+states = ['INIT']
 
 for img_path in ansFiles:
     ocr_crop_dir = outputdir + '/' + img_path.replace('.png','')
@@ -239,6 +240,8 @@ for img_path in ansFiles:
     os.makedirs(pngdir, exist_ok=True)
 
     funcDef = ''.join([char for char in img_path.replace('.png','') if char.isalnum()])
+    if not funcDef.upper() in states:
+        states.append(funcDef.upper())
 
     # 이미지 로드
     originImg = cv2.imread(img_path)
@@ -388,7 +391,6 @@ for img_path in ansFiles:
         jsons = json.dumps(convert_numpy({'ocr_results':ocr_results,'your_click':your_clicks}),indent=4)
         # jsons = json.dumps({'ocr_results':ocr_results,'your_click':your_clicks},indent=4)
         outfile.write(jsons)
-    
     your_code += '''def {img}Png:\n'''.format(img=funcDef)
     spaces = 4
     recCount = 1
@@ -410,6 +412,13 @@ for img_path in ansFiles:
             your_code += '\n'
     your_code += '\n'
 
+your_code += '''STATES = [\n'''
+for i,state in enumerate(states):
+    if i == 0:
+        your_code += ' '*spaces + """'{state}'\n""".format(state=state)
+    else:
+        your_code += ' '*spaces + """, '{state}'\n""".format(state=state)
+your_code += ''']\n'''
 
 with open(os.path.join(".","code.py"),'w',encoding="utf-8") as outfile:
     print('write :', os.path.join(".","code.py"))
