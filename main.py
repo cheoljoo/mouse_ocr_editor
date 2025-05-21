@@ -131,23 +131,40 @@ def convert_numpy(obj):
 def mouse_callback(event, x, y, flags, param):   # 마우스 이벤트 콜백 함수
     global drawing, start_point, end_point, img
 
-    if event == cv2.EVENT_LBUTTONDOWN and not (flags & cv2.EVENT_FLAG_CTRLKEY):
-        print(f"Clicked at: ({x}, {y})")
+    if event == cv2.EVENT_RBUTTONDOWN and not (flags & cv2.EVENT_FLAG_CTRLKEY):
+        print(f"Clicked at: R({x}, {y})")
         
 
         # 점 그리기 (빨간 원)
         cv2.circle(img, (x, y), 5, (0, 0, 255), -1)
         
         # 텍스트 표시
-        cv2.putText(img, f"({x},{y})", (x+10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        cv2.putText(img, f"R({x},{y})", (x+10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
         # 위치 저장
-        click_positions.append((x, y))
-        your_clicks.append( {'type':'point','location':[x,y],'center':[x,y]}  )
+        your_clicks.append( {'type':'rightPoint','location':[x,y],'center':[x,y]}  )
 
         # 파일에 저장 (append 모드)
         with open(output_file, "a") as f:
-            f.write(f"{x},{y}\n")
+            f.write(f"R{x},{y}\n")
+        return
+
+    if event == cv2.EVENT_LBUTTONDOWN and not (flags & cv2.EVENT_FLAG_CTRLKEY):
+        print(f"Clicked at: L({x}, {y})")
+        
+
+        # 점 그리기 (빨간 원)
+        cv2.circle(img, (x, y), 5, (0, 0, 255), -1)
+        
+        # 텍스트 표시
+        cv2.putText(img, f"L({x},{y})", (x+10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+
+        # 위치 저장
+        your_clicks.append( {'type':'leftPoint','location':[x,y],'center':[x,y]}  )
+
+        # 파일에 저장 (append 모드)
+        with open(output_file, "a") as f:
+            f.write(f"L{x},{y}\n")
         return
 
     # Ctrl + 마우스 왼쪽 버튼 눌렀을 때
@@ -182,7 +199,6 @@ def mouse_callback(event, x, y, flags, param):   # 마우스 이벤트 콜백 �
         your_clicks.append( {'type':'rectangle','location':[start_point,end_point],'center':[center_x,center_y]}  )
 
         # 위치 저장
-        click_positions.append((start_point, end_point))
         with open(output_file, "a") as f:
             f.write(f"{start_point[0]},{start_point[1]},{end_point[0]},{end_point[1]}\n")
 
@@ -210,10 +226,19 @@ if args.restart:
     shutil.rmtree(outputdir, ignore_errors=True)
 shutil.rmtree(output_file, ignore_errors=True)
 
+your_code = '''
+import pyautogui
+import cv2
+
+
+'''
+
 for img_path in ansFiles:
     ocr_crop_dir = outputdir + '/' + img_path.replace('.png','')
     pngdir = ocr_crop_dir + '/ocr'
     os.makedirs(pngdir, exist_ok=True)
+
+    funcDef = ''.join([char for char in img_path.replace('.png','') if char.isalnum()])
 
     # 이미지 로드
     originImg = cv2.imread(img_path)
@@ -279,7 +304,6 @@ for img_path in ansFiles:
                 ocr_results = json.load(infile)
 
     # 좌표 저장용
-    click_positions = []
     clone = img.copy()
     # 사각형 그리기 상태 변수
     drawing = False
@@ -304,7 +328,6 @@ for img_path in ansFiles:
         key = cv2.waitKey(1) & 0xFF
         if key == ord('r'):
             img = clone.copy()
-            click_positions.clear()
             your_clicks = []
         elif key == 27:
             finalpng = os.path.join(ocr_crop_dir,"final.png")
@@ -365,7 +388,32 @@ for img_path in ansFiles:
         jsons = json.dumps(convert_numpy({'ocr_results':ocr_results,'your_click':your_clicks}),indent=4)
         # jsons = json.dumps({'ocr_results':ocr_results,'your_click':your_clicks},indent=4)
         outfile.write(jsons)
+    
+    your_code += '''def {img}Png:\n'''.format(img=funcDef)
+    spaces = 4
+    recCount = 1
+    for v in your_clicks:
+        if v['type'] == 'rectangle':
+            your_code += ' '*spaces +   '''center{c},left{c} = findImageMoveToCenter('{image}')\n'''.format(image=v['image'],c=recCount)
+            your_code += ' '*spaces +   '''if center{c}:\n'''
+            your_code += ' '*spaces +   '''    pass\n'''
+            your_code += '\n'
+            recCount += 1
+        elif v['type'] == 'leftPoint':
+            your_code += ' '*spaces +   '''pyautogui.moveTo({position})\n'''.format(position=v['location'])
+            your_code += ' '*spaces +   '''pyautogui.click()\n'''
+            your_code += '\n'
+        elif v['type'] == 'rightPoint':
+            your_code += ' '*spaces +   '''pyautogui.moveTo({position})\n'''.format(position=v['location'])
+            your_code += ' '*spaces +   '''pyautogui.click()\n'''
+            your_code += ' '*spaces +   '''pyautogui.write('{text}'.format(text='your_text'), interval=0.15)   # type with interval 0.15 sec. you need return key when you want to type return\n'''
+            your_code += '\n'
+    your_code += '\n'
 
+
+with open(os.path.join(".","code.py"),'w',encoding="utf-8") as outfile:
+    print('write :', os.path.join(".","code.py"))
+    outfile.write(your_code)
 
 
 
