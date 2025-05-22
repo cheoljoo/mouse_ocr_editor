@@ -236,6 +236,7 @@ your_md = ''
 states = ['INIT']
 
 for img_path in ansFiles:
+    your_clicks = []
     ocr_crop_dir = outputdir + '/' + img_path.replace('.png','')
     pngdir = ocr_crop_dir + '/ocr'
     os.makedirs(pngdir, exist_ok=True)
@@ -302,10 +303,13 @@ for img_path in ansFiles:
     else:
         img = cv2.imread(os.path.join(ocr_crop_dir, "intermediateOcr.png"))
         ocr_results = []
-        if os.path.exists(os.path.join(ocr_crop_dir, "ocr_results.json")):
-            with open(os.path.join(ocr_crop_dir,"ocr_results.json"),'r',encoding="utf-8") as infile:
-                print('read :', os.path.join(ocr_crop_dir,"ocr_results.json"))
-                ocr_results = json.load(infile)
+        jsons = json.dumps(convert_numpy({'ocr_results':ocr_results,'your_click':your_clicks}),indent=4)
+        if os.path.exists(os.path.join(ocr_crop_dir, "final.json")):
+            with open(os.path.join(ocr_crop_dir,"final.json"),'r',encoding="utf-8") as infile:
+                print('read :', os.path.join(ocr_crop_dir,"final.json"))
+                jsons = json.load(infile)
+                ocr_results = jsons['ocr_results']
+                your_clicks = jsons['your_click']
 
     # 좌표 저장용
     clone = img.copy()
@@ -313,7 +317,6 @@ for img_path in ansFiles:
     drawing = False
     start_point = (-1, -1)
     end_point = (-1, -1)
-    your_clicks = []
 
     log_elapsed_time('opencv windows setting starts')
     # OpenCV 윈도우 설정
@@ -328,10 +331,26 @@ for img_path in ansFiles:
             # 이미지 크기 가져오기
             height, width = img.shape[:2]
             cv2.resizeWindow("Image", width, height)
+            if your_clicks:
+                for your_click in your_clicks:
+                    if your_click['type'] == 'leftPoint' or your_click['type'] == 'rightPoint':
+                        x,y = your_click['location']
+                        cv2.circle(img, (x, y), 5, (0, 0, 255), -1)
+                        cv2.putText(img, f"L({x},{y})", (x+10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+                    elif your_click['type'] == 'rectangle':
+                        start_point = your_click['location'][0]
+                        end_point = your_click['location'][1]
+                        cv2.rectangle(img, start_point, end_point, (255, 0, 0), 2)
+                        text_pos = (start_point[0] + 10, start_point[1] + 10)
+                        cv2.putText(img, f"{start_point}->{end_point}", text_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+                        cv2.circle(img, (x, y), 5, (0, 0, 255), -1)
+                        cv2.putText(img, f"L({x},{y})", (x+10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
             cv2.imshow("Image", img)
+                        
         key = cv2.waitKey(1) & 0xFF
         if key == ord('r'):
             img = clone.copy()
+            cv2.imshow("Image", img)
             your_clicks = []
         elif key == 27:
             finalpng = os.path.join(ocr_crop_dir,"final.png")
