@@ -232,6 +232,7 @@ import cv2
 
 
 '''
+your_md = ''
 states = ['INIT']
 
 for img_path in ansFiles:
@@ -394,23 +395,40 @@ for img_path in ansFiles:
     your_code += '''def {img}Png:\n'''.format(img=funcDef)
     spaces = 4
     recCount = 1
+    local_check_md = ''
+    local_point_md = ''
     for v in your_clicks:
         if v['type'] == 'rectangle':
             your_code += ' '*spaces +   '''center{c},left{c} = findImageMoveToCenter('{image}')\n'''.format(image=v['image'],c=recCount)
             your_code += ' '*spaces +   '''if center{c}:\n'''
             your_code += ' '*spaces +   '''    pass\n'''
             your_code += '\n'
+            local_check_md += '- check rectangle whether it exists or not when we enter in {state} STATE.\n'.format(state=funcDef.upper())
+            local_check_md += '    - position:{position} ![]({img})\n'.format(position=v['location'],img=v['image'])
             recCount += 1
         elif v['type'] == 'leftPoint':
             your_code += ' '*spaces +   '''pyautogui.moveTo({position})\n'''.format(position=v['location'])
             your_code += ' '*spaces +   '''pyautogui.click()\n'''
             your_code += '\n'
+            local_point_md += '- click this position: {position} , STATE {state}\n'.format(state=funcDef.upper(),position=v['location'])
         elif v['type'] == 'rightPoint':
             your_code += ' '*spaces +   '''pyautogui.moveTo({position})\n'''.format(position=v['location'])
             your_code += ' '*spaces +   '''pyautogui.click()\n'''
             your_code += ' '*spaces +   '''pyautogui.write('{text}'.format(text='your_text'), interval=0.15)   # type with interval 0.15 sec. you need return key when you want to type return\n'''
+            local_point_md += '- click this position: {position} , STATE {state} and write the TEXT\n'.format(state=funcDef.upper(),position=v['location'])
             your_code += '\n'
     your_code += '\n'
+    if local_check_md or local_point_md:
+        your_md += '# STATE : {state}\n'.format(state=funcDef.upper())
+        your_md += '- python function name : {fn}\n'.format(fn=funcDef+'Png')
+        your_md += '- image path : {ip}\n'.format(ip=img_path)
+        your_md += '    - ![]({ip})\n'.format(ip=img_path)
+        if local_check_md:
+            your_md += local_check_md
+        if local_point_md:
+            your_md += local_point_md
+        your_md += '- final image path : {ip}\n'.format(ip=os.path.join(ocr_crop_dir,"final.png"))
+        your_md += '    - ![]({ip})\n'.format(ip=os.path.join(ocr_crop_dir,"final.png"))
 
 your_code += '''STATES = [\n'''
 for i,state in enumerate(states):
@@ -420,9 +438,12 @@ for i,state in enumerate(states):
         your_code += ' '*spaces + """, '{state}'\n""".format(state=state)
 your_code += ''']\n'''
 
-with open(os.path.join(".","code.py"),'w',encoding="utf-8") as outfile:
-    print('write :', os.path.join(".","code.py"))
+with open(os.path.join(".","your.py"),'w',encoding="utf-8") as outfile:
+    print('write :', os.path.join(".","your.py"))
     outfile.write(your_code)
+with open(os.path.join(".","your.md"),'w',encoding="utf-8") as outfile:
+    print('write :', os.path.join(".","your.md"))
+    outfile.write(your_md)
 
 
 
