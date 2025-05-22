@@ -409,12 +409,11 @@ for img_path in ansFiles:
         jsons = json.dumps(convert_numpy({'ocr_results':ocr_results,'your_click':your_clicks}),indent=4)
         # jsons = json.dumps({'ocr_results':ocr_results,'your_click':your_clicks},indent=4)
         outfile.write(jsons)
-    your_code += '''def f{img}Png():\n'''.format(img=funcDef)
+    your_code += '''def f{img}Png(v):\n'''.format(img=funcDef)
     spaces = 4
     recCount = 1
     local_check_md = ''
     local_point_md = ''
-    code_flag = False
     for v in your_clicks:
         if v['type'] == 'rectangle':
             your_code += ' '*spaces +   '''center{c},left{c} = findImageMoveToCenter('{image}')\n'''.format(image=v['image'],c=recCount)
@@ -424,22 +423,18 @@ for img_path in ansFiles:
             local_check_md += '- check rectangle whether it exists or not when we enter in {state} STATE.\n'.format(state=funcDef.upper())
             local_check_md += '    - position:{position} ![]({img})\n'.format(position=v['location'],img=v['image'])
             recCount += 1
-            code_flag = True
         elif v['type'] == 'leftPoint':
             your_code += ' '*spaces +   '''pyautogui.moveTo({position})\n'''.format(position=v['location'])
             your_code += ' '*spaces +   '''pyautogui.click()\n'''
             your_code += '\n'
             local_point_md += '- click this position: {position} , STATE {state}\n'.format(state=funcDef.upper(),position=v['location'])
-            code_flag = True
         elif v['type'] == 'rightPoint':
             your_code += ' '*spaces +   '''pyautogui.moveTo({position})\n'''.format(position=v['location'])
             your_code += ' '*spaces +   '''pyautogui.click()\n'''
             your_code += ' '*spaces +   '''pyautogui.write('{text}'.format(text='your_text'), interval=0.15)   # type with interval 0.15 sec. you need return key when you want to type return\n'''
             local_point_md += '- click this position: {position} , STATE {state} and write the TEXT\n'.format(state=funcDef.upper(),position=v['location'])
             your_code += '\n'
-            code_flag = True
-    if code_flag == False:
-        your_code += ' '*spaces +   '''pass\n'''
+    your_code += ' '*spaces +   '''return True\n'''
     your_code += '\n'
     if local_check_md or local_point_md:
         your_md += '# STATE : {state}\n'.format(state=funcDef.upper())
@@ -453,13 +448,13 @@ for img_path in ansFiles:
         your_md += '- final image path : {ip}\n'.format(ip=os.path.join(ocr_crop_dir,"final.png"))
         your_md += '    - ![]({ip})\n'.format(ip=os.path.join(ocr_crop_dir,"final.png"))
 
-your_code += '''STATES = [\n'''
+your_code += '''STATES = {\n'''
 for i,state in enumerate(states):
     if i == 0:
-        your_code += ' '*spaces + """'{state}'\n""".format(state=state)
+        your_code += ' '*spaces + """'{state}'""".format(state=state) + """:  [ f{func}Png , INIT , INIT ]\n""".format(func=funcDef)
     else:
-        your_code += ' '*spaces + """, '{state}'\n""".format(state=state)
-your_code += ''']\n'''
+        your_code += ' '*spaces + """, '{state}'""".format(state=state) + """:  [ f{func}Png , INIT , INIT ]\n""".format(func=funcDef)
+your_code += '''}\n'''
 
 with open(os.path.join(".","your.py"),'w',encoding="utf-8") as outfile:
     print('write :', os.path.join(".","your.py"))
