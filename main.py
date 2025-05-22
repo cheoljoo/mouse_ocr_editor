@@ -343,8 +343,6 @@ for img_path in ansFiles:
                         cv2.rectangle(img, start_point, end_point, (255, 0, 0), 2)
                         text_pos = (start_point[0] + 10, start_point[1] + 10)
                         cv2.putText(img, f"{start_point}->{end_point}", text_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-                        cv2.circle(img, (x, y), 5, (0, 0, 255), -1)
-                        cv2.putText(img, f"L({x},{y})", (x+10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
             cv2.imshow("Image", img)
                         
         key = cv2.waitKey(1) & 0xFF
