@@ -392,7 +392,7 @@ for img_path in ansFiles:
         jsons = json.dumps(convert_numpy({'ocr_results':ocr_results,'your_click':your_clicks}),indent=4)
         # jsons = json.dumps({'ocr_results':ocr_results,'your_click':your_clicks},indent=4)
         outfile.write(jsons)
-    your_code += '''def {img}Png:\n'''.format(img=funcDef)
+    your_code += '''def {img}Png():\n'''.format(img=funcDef)
     spaces = 4
     recCount = 1
     local_check_md = ''
