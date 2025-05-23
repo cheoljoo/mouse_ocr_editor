@@ -243,7 +243,7 @@ for img_path in ansFiles:
 
     funcDef = ''.join([char for char in img_path.replace('.png','') if char.isalnum()])
     if not funcDef.upper() in states:
-        states.append(funcDef.upper())
+        states.append(funcDef)
 
     # 이미지 로드
     originImg = cv2.imread(img_path)
@@ -357,15 +357,15 @@ for img_path in ansFiles:
             copied_your_clicks = copy.deepcopy(your_clicks)
             count = ocrMaxCount + 100
             for v in your_clicks:
-                ocridx,youridx = find_nearest_ocr_text(v['center'], ocr_results,your_clicks)
-                if ocridx != None:
-                    (bbox, text, confidence) = ocr_results[ocridx]
-                    print("📌 your click과 가장 가까운 OCR 텍스트:", v , '~~', ocridx, bbox , text)
-                    v['nearest_ocr'] = ocr_results[ocridx]
-                if youridx != None:
-                    yourClickDict = copied_your_clicks[youridx]
-                    print("📌 your click과 가장 가까운 your drag box index:", v , '~~' , youridx , yourClickDict, yourClickDict['location'])
-                    v['nearest_rec'] = yourClickDict
+                # ocridx,youridx = find_nearest_ocr_text(v['center'], ocr_results,your_clicks)
+                # if ocridx != None:
+                #     (bbox, text, confidence) = ocr_results[ocridx]
+                #     print("📌 your click과 가장 가까운 OCR 텍스트:", v , '~~', ocridx, bbox , text)
+                #     v['nearest_ocr'] = ocr_results[ocridx]
+                # if youridx != None:
+                #     yourClickDict = copied_your_clicks[youridx]
+                #     print("📌 your click과 가장 가까운 your drag box index:", v , '~~' , youridx , yourClickDict, yourClickDict['location'])
+                #     v['nearest_rec'] = yourClickDict
                 if v['type'] == 'rectangle':
                     x_coords = [int(pt[0]) for pt in v['location']]
                     y_coords = [int(pt[1]) for pt in v['location']]
@@ -381,7 +381,7 @@ for img_path in ansFiles:
                     roi = originImg[y_min:y_max, x_min:x_max]
 
                     # 저장
-                    output_path = os.path.join(pngdir, f"{count}.png")
+                    output_path = pngdir+f"/{count}.png"
                     cv2.imwrite(output_path, roi)
                     v['image'] = output_path
                     count += 1
@@ -409,15 +409,17 @@ for img_path in ansFiles:
         jsons = json.dumps(convert_numpy({'ocr_results':ocr_results,'your_click':your_clicks}),indent=4)
         # jsons = json.dumps({'ocr_results':ocr_results,'your_click':your_clicks},indent=4)
         outfile.write(jsons)
-    your_code += '''def f{img}Png(v):\n'''.format(img=funcDef)
     spaces = 4
+    your_code += '''def f{img}(v):\n'''.format(img=funcDef)
+    your_code += ' '*spaces + """if v['debug']:\n"""
+    your_code += ' '*spaces + """    print(cu.getClassFunctionName())\n"""
     recCount = 1
     local_check_md = ''
     local_point_md = ''
     for v in your_clicks:
         if v['type'] == 'rectangle':
             your_code += ' '*spaces +   '''center{c},left{c} = findImageMoveToCenter('{image}')\n'''.format(image=v['image'],c=recCount)
-            your_code += ' '*spaces +   '''if center{c}:\n'''
+            your_code += ' '*spaces +   '''if center{c}:\n'''.format(c=recCount)
             your_code += ' '*spaces +   '''    pass\n'''
             your_code += '\n'
             local_check_md += '- check rectangle whether it exists or not when we enter in {state} STATE.\n'.format(state=funcDef.upper())
@@ -451,9 +453,10 @@ for img_path in ansFiles:
 your_code += '''STATES = {\n'''
 for i,state in enumerate(states):
     if i == 0:
-        your_code += ' '*spaces + """'{state}'""".format(state=state) + """:  [ f{func}Png , INIT , INIT ]\n""".format(func=funcDef)
+        your_code += ' '*spaces + """'{state}'""".format(state=state.upper()) + """:  [ f{func} , INIT , INIT ]\n""".format(func=state)
     else:
-        your_code += ' '*spaces + """, '{state}'""".format(state=state) + """:  [ f{func}Png , INIT , INIT ]\n""".format(func=funcDef)
+        your_code += ' '*spaces + """, '{state}'""".format(state=state.upper()) + """:  [ f{func} , 'INIT' , 'INIT' ]\n""".format(func=state)
+your_code += ' '*spaces + """, '_DONE_' : [None , 'INIT' , 'INIT' ]\n"""
 your_code += '''}\n'''
 
 with open(os.path.join(".","your.py"),'w',encoding="utf-8") as outfile:
